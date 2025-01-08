@@ -6,28 +6,44 @@
 #define NN_H
 
 #include <vector>
-#include <iostream>
-#include <cmath>
-#include <iomanip>
 
 namespace NN {
     class NNcore {
+        int size;
+        double studyRate;
+
+        std::vector<std::vector<double> > layers;
+        std::vector<std::vector<double> > layersZ;
+        std::vector<int> layerSize;
+
+        std::vector<std::vector<double> > b;
+
+        std::vector<std::vector<std::vector<double> > > w;
+
     public:
+        double train(std::vector<std::vector<double> > inNums, std::vector<int> correctOut, bool getAcc = false);
+
+        void test(std::vector<std::vector<double> > inNums, std::vector<int> correctOut);
+
         std::vector<double> forward(std::vector<double> inNums, bool printRes = false);
 
-        double pushBack(std::vector<double> correctOut);
+        double backpropagation(std::vector<double> correctOut);
 
         double CalCost(std::vector<double> correctOut);
 
         void changeStudyRate(double rate);
 
-        void init(std::vector<int> LayerS, double studyR);
+        void init(const std::vector<int> &LayerS, double studyR);
 
         int choice();
 
         void printLayers();
 
+        static void printLayers(const NNcore &nn);
+
         void printW(int layerNumberToPrint);
+
+        static void printW(const NNcore &nn, int layerNumberToPrint);
     };
 }
 

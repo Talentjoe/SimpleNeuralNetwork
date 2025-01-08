@@ -23,8 +23,8 @@ unsigned char reverse(unsigned char A) {
 int main() {
     cout << "Start" << endl;
     const int testSize = 10000;
-    const int sizeOfTest = 6000;
-    const int termsOfTrain = 10;
+    const int sizeOfTest = 60000;
+    const int termsOfTrain = 1;
     auto *testImageList = new Image [testSize];
     auto *imageList = new Image [sizeOfTest];
 
@@ -86,7 +86,7 @@ int main() {
 
     auto *nn = new NN::NNcore();
 
-    nn->init(std::vector{28 * 28, 64, 10}, 0.1);
+    nn->init(std::vector{28 * 28, 128,64, 10}, 1);
 
     int correctnum = 0, wrongnum = 0;
     for (int j = 0; j < termsOfTrain; j++) {
@@ -97,7 +97,7 @@ int main() {
             vector<double> answer = vector<double>(10);
             answer[imageList[i].lable] = 1;
 
-            nn->pushBack(answer);
+            nn->backpropagation(answer);
 
             if (nn->choice() == imageList[i].lable) {
                 correctnum++;
@@ -105,7 +105,7 @@ int main() {
                 wrongnum++;
             }
             if (i % 500 == 0)
-                cout << "Term: " << j << " Train Time" << i << "  " << correctnum / (double) (correctnum + wrongnum) <<
+                cout << "Term: " << j+1 << " Train Time " << i << "  Process:" << (double)sizeOfTest/i<<"%  "<< correctnum / (double) (correctnum + wrongnum) <<
                         endl;
         }
     }

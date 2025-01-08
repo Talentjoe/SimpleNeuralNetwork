@@ -4,23 +4,15 @@
 
 #include "NN.h"
 
+#include <iostream>
+#include <cmath>
+#include <iomanip>
+
 namespace NN {
     using namespace std;
 
-    int size;
-    double studyRate;
-
-    std::vector<std::vector<double> > layers;
-    std::vector<std::vector<double> > layersZ;
-    std::vector<int> layerSize;
-
-    std::vector<std::vector<double> > b;
-
-    std::vector<std::vector<std::vector<double> > > w;
-
-
     double getRandomDoubleNumber(double max = 1, double min = -1) {
-        return min + (double) (rand()) / ((double) (RAND_MAX / (max - min)));
+        return min + (double) (rand()) / (RAND_MAX / (max - min));
     }
 
     double sigmoid(double x) {
@@ -31,6 +23,50 @@ namespace NN {
         return sigmoid(x) * (1 - sigmoid(x));
     }
 
+    double NNcore::train(std::vector<std::vector<double> > inNums, std::vector<int> correctOut, bool getAcc) {
+        if (inNums.size() != correctOut.size()) {
+            cout << "Size Not Match !! " << endl;
+            return -1;
+        }
+
+        int corrctCnt = 0;
+        int wrongCnt = 0;
+        std::vector<double> answer(10, 0.0);
+
+        for (int i = 0; i < inNums.size(); i++) {
+            if (inNums[i].size() != layerSize[0] || correctOut[i] > layerSize[size - 1]) {
+                cout << "Size Not Match !! " << endl;
+                return -1;
+            }
+
+            forward(inNums[i]);
+            answer[correctOut[i]] = 1;
+            backpropagation(answer);
+            answer[correctOut[i]] = 0;
+
+            if (getAcc) {
+                if (choice() == correctOut[i]) {
+                    corrctCnt++;
+                } else {
+                    wrongCnt++;
+                }
+            }
+
+            if (i % 1000 == 0) {
+                cout << "\rProgress: " << i + 1 / (double) inNums.size() * 100 << "%";
+                if (getAcc) {
+                    cout << " Correct Percentage: " << corrctCnt / (double) (corrctCnt + wrongCnt) * 100 << "%";
+                }
+                cout << std::flush;
+            }
+        }
+        cout<< "Finish Training" << inNums.size()<< "Data" << endl;
+
+        if (!getAcc) return 0;
+
+        cout<<"With Accuracy: "<< corrctCnt / (double) (corrctCnt + wrongCnt) * 100 << "%" << endl;
+        return corrctCnt / (double) (corrctCnt + wrongCnt);
+    }
 
     std::vector<double> NNcore::forward(std::vector<double> inNums, bool printRes) {
         if (inNums.size() != layerSize[0]) {
@@ -73,7 +109,7 @@ namespace NN {
         return cost;
     }
 
-    double NNcore::pushBack(std::vector<double> correctOut) {
+    double NNcore::backpropagation(std::vector<double> correctOut) {
         std::vector<std::vector<double> > delta(size);
         for (int i = 1; i < size; i++) {
             delta[i].resize(layerSize[i]);
@@ -96,7 +132,6 @@ namespace NN {
                 b[i][j] -= delta[i][j] * studyRate;
 
                 for (int k = 0; k < layerSize[i - 1]; k++) {
-                    //cout<<layers[i-1][k]*delta[i][j]*studyRate;
                     w[i - 1][k][j] -= layers[i - 1][k] * delta[i][j] * studyRate;
                 }
             }
@@ -109,23 +144,6 @@ namespace NN {
         return after - pre;
     }
 
-    /*
-    double CalCost(std::vector<double> correctOut)
-    {
-        double cost=0;
-        if(correctOut.size()!=layerSize[Size-1])
-        {
-            cout<<"Size Error"<<endl;
-            return 0;
-        }
-        for(int i = 0;i < layerSize[Size-1];i++)
-        {
-            cost += (layers[Size-1][i]-correctOut[i])*(layers[Size-1][i]-correctOut[i])/2.0;
-        }
-        cost/=layerSize[Size-1];
-        return cost;
-    }*/
-
 
     void NNcore::printLayers() {
         for (int i = 0; i < size; i++) {
@@ -137,7 +155,23 @@ namespace NN {
         }
     }
 
+    void NNcore::printLayers(const NNcore &nn) {
+        for (int i = 0; i < nn.size; i++) {
+            cout << "Layer " << setw(2) << i << ": ";
+            for (int j = 0; j < nn.layerSize[i]; j++)
+                cout << setw(10) << nn.layers[i][j] << " ";
+
+            cout << endl << endl;
+        }
+    }
+
+
     void NNcore::printW(int layerNumberToPrint) {
+        if (layerNumberToPrint >= size - 1) {
+            cout << "Layer Number Error" << endl;
+            return;
+        }
+
         cout << "W from layer " << layerNumberToPrint << " to " << layerNumberToPrint + 1 << ": " << endl;
         cout << "From↓   To-> ";
         for (int i = 0; i < layerSize[layerNumberToPrint + 1]; i++) {
@@ -149,6 +183,28 @@ namespace NN {
             cout << "From " << setw(2) << i << " note:";
             for (int j = 0; j < layerSize[layerNumberToPrint + 1]; j++)
                 cout << setw(10) << w[layerNumberToPrint][i][j] << " ";
+
+            cout << endl << endl;
+        }
+    }
+
+    void NNcore::printW(const NNcore &nn, int layerNumberToPrint) {
+        if (layerNumberToPrint >= nn.size - 1) {
+            cout << "Layer Number Error" << endl;
+            return;
+        }
+
+        cout << "W from layer " << layerNumberToPrint << " to " << layerNumberToPrint + 1 << ": " << endl;
+        cout << "From↓   To-> ";
+        for (int i = 0; i < nn.layerSize[layerNumberToPrint + 1]; i++) {
+            cout << setw(10) << i << " ";
+        }
+        cout << endl << endl;
+
+        for (int i = 0; i < nn.layerSize[layerNumberToPrint]; i++) {
+            cout << "From " << setw(2) << i << " note:";
+            for (int j = 0; j < nn.layerSize[layerNumberToPrint + 1]; j++)
+                cout << setw(10) << nn.w[layerNumberToPrint][i][j] << " ";
 
             cout << endl << endl;
         }
@@ -166,42 +222,44 @@ namespace NN {
         return res;
     }
 
-    void NNcore::init(std::vector<int> LayerS, double studyR) {
+    void NNcore::init(const std::vector<int> &LayerS, const double studyR) {
         size = LayerS.size();
         layerSize = LayerS;
-        layers.resize(size);
-        layersZ.resize(size);
-        b.resize(size);
-        w.resize(size - 1);
-
         studyRate = studyR;
 
-        for (int i = 0; i < size; i++) {
+        layers = std::vector<std::vector<double> >(size);
+        for (int i = 0; i < size; ++i) {
             layers[i].resize(layerSize[i]);
+        }
 
-            if (i != 0) {
-                layersZ[i].resize(layerSize[i]);
-                b[i].resize(layerSize[i]);
-            }
+        layersZ = std::vector<std::vector<double> >(size);
+        b = std::vector<std::vector<double> >(size);
+        for (int i = 1; i < size; ++i) {
+            layersZ[i] = std::vector<double>(layerSize[i]);
+            b[i] = std::vector<double>(layerSize[i]);
+        }
 
-            if (i < size - 1) {
-                w[i].resize(layerSize[i]);
-                for (int j = 0; j < layerSize[i]; j++) {
-                    w[i][j].resize(layerSize[i + 1]);
-                }
-            }
+        w = std::vector<std::vector<std::vector<double> > >(size - 1);
+        for (int i = 0; i < size - 1; ++i) {
+            w[i] = std::vector<std::vector<double> >(
+                layerSize[i],
+                std::vector<double>(layerSize[i + 1])
+            );
         }
 
         cout << "RESIZED" << endl;
 
         for (int i = 0; i < size; i++) {
+            bool firstLayer = i == 0;
+            bool lastLayer = i == size - 1;
+
             for (int j = 0; j < layerSize[i]; j++) {
                 layers[i][j] = getRandomDoubleNumber();
-                if (i != 0) {
+                if (!firstLayer) {
                     layersZ[i][j] = getRandomDoubleNumber();
                     b[i][j] = getRandomDoubleNumber();
                 }
-                if (i < size - 1) {
+                if (!lastLayer) {
                     for (int k = 0; k < layerSize[i + 1]; k++) {
                         w[i][j][k] = getRandomDoubleNumber();
                     }
@@ -210,7 +268,7 @@ namespace NN {
         }
     }
 
-    void changeStudyRate(double rate) {
+    void NNcore::changeStudyRate(const double rate) {
         studyRate = rate;
     }
 } // NN
