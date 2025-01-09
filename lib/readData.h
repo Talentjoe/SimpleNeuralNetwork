@@ -8,12 +8,12 @@
 #include <vector>
 #include <string>
 
-namespace readFile {
+namespace readData {
     class readData {
     public:
-        static std::vector<std::vector<double> > readImageData(std::string path);
+        static std::vector<std::vector<double> > readImageData(std::string path, int size = -1);
 
-        static std::vector<int> readTagData(std::string path);
+        static std::vector<int> readTagData(std::string path,int size = -1);
     };
 }
 

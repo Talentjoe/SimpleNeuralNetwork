@@ -6,11 +6,13 @@
 #define NN_H
 
 #include <vector>
+#include <string>
 
 namespace NN {
     class NNcore {
         int size;
         double studyRate;
+        double dropRate;
 
         std::vector<std::vector<double> > layers;
         std::vector<std::vector<double> > layersZ;
@@ -23,7 +25,7 @@ namespace NN {
     public:
         double train(std::vector<std::vector<double> > inNums, std::vector<int> correctOut, bool getAcc = false);
 
-        void test(std::vector<std::vector<double> > inNums, std::vector<int> correctOut);
+        double test(std::vector<std::vector<double> > inNums, std::vector<int> correctOut);
 
         std::vector<double> forward(std::vector<double> inNums, bool printRes = false);
 
@@ -44,6 +46,10 @@ namespace NN {
         void printW(int layerNumberToPrint);
 
         static void printW(const NNcore &nn, int layerNumberToPrint);
+
+        static void save(const NNcore &nn, std::string path);
+
+        void init(const std::string &path, double studyRate, double dropRate);
     };
 }
 

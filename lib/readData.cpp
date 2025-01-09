@@ -9,7 +9,7 @@
 
 using namespace std;
 
-namespace readFile {
+namespace readData {
     unsigned int reverseint(unsigned int A) {
         return ((((uint32_t) (A) & 0xff000000) >> 24) |
                 (((uint32_t) (A) & 0x00ff0000) >> 8) |
@@ -22,7 +22,7 @@ namespace readFile {
                 (((A) & (unsigned char) 0x00ff) << 8));
     }
 
-    vector<vector<double> > readData::readImageData(std::string path) {
+    vector<vector<double> > readData::readImageData(std::string path, int sizeE) {
         ifstream inFile(path, ios::in | ios::binary);
         if (!inFile) {
             cout << "error" << endl;
@@ -36,18 +36,13 @@ namespace readFile {
         int width;
 
         inFile.read((char *) &a, sizeof(unsigned int));
-        cout << "magic number: " << reverseint(a) << endl;
-
         inFile.read((char *) &n, sizeof(unsigned int));
         size = reverseint(n);
-        cout << "number of images: " << reverseint(n) << endl;
-
+        size = sizeE == -1 ? size : sizeE > size ? size : sizeE;
         inFile.read((char *) &a, sizeof(unsigned int));
         height = reverseint(a);
-        cout << "number of rows: " << reverseint(a) << endl;
         inFile.read((char *) &a, sizeof(unsigned int));
         width = reverseint(a);
-        cout << "number of colums" << reverseint(a) << endl;
 
         vector<vector<double> > imageList(size, vector<double>(height * width));
 
@@ -64,7 +59,7 @@ namespace readFile {
         return imageList;
     }
 
-    static std::vector<int> readTagData(std::string path) {
+    std::vector<int> readData::readTagData(std::string path, int sizeE) {
         ifstream inFileLable(path, ios::in | ios::binary);
         if (!inFileLable) {
             cout << "error" << endl;
@@ -74,11 +69,10 @@ namespace readFile {
         int size;
         unsigned int n, a;
         inFileLable.read((char *) &a, sizeof(unsigned int));
-        cout << "magic number: " << reverseint(a) << endl;
 
         inFileLable.read((char *) &n, sizeof(unsigned int));
-        cout << "number of tags: " << reverseint(n) << endl;
         size = reverseint(n);
+        size = sizeE == -1 ? size : sizeE > size ? size : sizeE;
 
         vector<int> tagList(size);
 

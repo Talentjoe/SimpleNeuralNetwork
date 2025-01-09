@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <cmath>
+#include <fstream>
 #include <iomanip>
 
 namespace NN {
@@ -23,7 +24,7 @@ namespace NN {
         return sigmoid(x) * (1 - sigmoid(x));
     }
 
-    double NNcore::train(std::vector<std::vector<double> > inNums, std::vector<int> correctOut, bool getAcc) {
+    double NNcore::train(vector<vector<double> > inNums, vector<int> correctOut, bool getAcc) {
         if (inNums.size() != correctOut.size()) {
             cout << "Size Not Match !! " << endl;
             return -1;
@@ -31,7 +32,7 @@ namespace NN {
 
         int corrctCnt = 0;
         int wrongCnt = 0;
-        std::vector<double> answer(10, 0.0);
+        vector<double> answer(10, 0.0);
 
         for (int i = 0; i < inNums.size(); i++) {
             if (inNums[i].size() != layerSize[0] || correctOut[i] > layerSize[size - 1]) {
@@ -53,22 +54,59 @@ namespace NN {
             }
 
             if (i % 1000 == 0) {
-                cout << "\rProgress: " << i + 1 / (double) inNums.size() * 100 << "%";
+                cout << "\rProgress: " << i / (double) inNums.size() * 100 << "%";
                 if (getAcc) {
                     cout << " Correct Percentage: " << corrctCnt / (double) (corrctCnt + wrongCnt) * 100 << "%";
                 }
-                cout << std::flush;
+                cout << "                    " << flush;
             }
         }
-        cout<< "Finish Training" << inNums.size()<< "Data" << endl;
+        cout << endl;
+        cout << "Finish Training " << inNums.size() << " Data" << endl;
 
         if (!getAcc) return 0;
 
-        cout<<"With Accuracy: "<< corrctCnt / (double) (corrctCnt + wrongCnt) * 100 << "%" << endl;
+        cout << "With Accuracy: " << corrctCnt / (double) (corrctCnt + wrongCnt) * 100 << "%" << endl;
         return corrctCnt / (double) (corrctCnt + wrongCnt);
     }
 
-    std::vector<double> NNcore::forward(std::vector<double> inNums, bool printRes) {
+    double NNcore::test(vector<vector<double> > inNums, vector<int> correctOut) {
+        if (inNums.size() != correctOut.size()) {
+            cout << "Size Not Match !! " << endl;
+            return -1;
+        }
+
+        int corrctCnt = 0;
+        int wrongCnt = 0;
+
+        for (int i = 0; i < inNums.size(); i++) {
+            if (inNums[i].size() != layerSize[0] || correctOut[i] > layerSize[size - 1]) {
+                cout << "Size Not Match !! " << endl;
+                return -1;
+            }
+
+            forward(inNums[i]);
+
+            if (choice() == correctOut[i]) {
+                corrctCnt++;
+            } else {
+                wrongCnt++;
+            }
+
+            if (i % 1000 == 0) {
+                cout << "\rProgress: " << i / (double) inNums.size() * 100 << "%";
+                cout << " Correct Percentage: " << corrctCnt / (double) (corrctCnt + wrongCnt) * 100 << "%";
+                cout << "                    " << flush;
+            }
+        }
+        cout << endl;
+        cout << "Finish Testing " << inNums.size() << " Data" << endl;
+
+        cout << "With Accuracy: " << corrctCnt / (double) (corrctCnt + wrongCnt) * 100 << "%" << endl;
+        return corrctCnt / (double) (corrctCnt + wrongCnt);
+    }
+
+    vector<double> NNcore::forward(vector<double> inNums, bool printRes) {
         if (inNums.size() != layerSize[0]) {
             cout << "Size Not Mathch !! " << endl;
             return {};
@@ -95,7 +133,7 @@ namespace NN {
         return layers[size - 1];
     }
 
-    double NNcore::CalCost(std::vector<double> correctOut) {
+    double NNcore::CalCost(vector<double> correctOut) {
         double cost = 0;
         if (correctOut.size() != layerSize[size - 1]) {
             cout << "Size Error" << endl;
@@ -109,8 +147,8 @@ namespace NN {
         return cost;
     }
 
-    double NNcore::backpropagation(std::vector<double> correctOut) {
-        std::vector<std::vector<double> > delta(size);
+    double NNcore::backpropagation(vector<double> correctOut) {
+        vector<vector<double> > delta(size);
         for (int i = 1; i < size; i++) {
             delta[i].resize(layerSize[i]);
         }
@@ -144,7 +182,6 @@ namespace NN {
         return after - pre;
     }
 
-
     void NNcore::printLayers() {
         for (int i = 0; i < size; i++) {
             cout << "Layer " << setw(2) << i << ": ";
@@ -164,7 +201,6 @@ namespace NN {
             cout << endl << endl;
         }
     }
-
 
     void NNcore::printW(int layerNumberToPrint) {
         if (layerNumberToPrint >= size - 1) {
@@ -212,7 +248,7 @@ namespace NN {
 
     int NNcore::choice() {
         double max = 0;
-        int res;
+        int res = 0;
         for (int i = 0; i < layerSize[size - 1]; i++) {
             if (layers[size - 1][i] > max) {
                 max = layers[size - 1][i];
@@ -222,28 +258,29 @@ namespace NN {
         return res;
     }
 
-    void NNcore::init(const std::vector<int> &LayerS, const double studyR) {
+    void NNcore::init(const vector<int>& LayerS, const double studyR) {
         size = LayerS.size();
         layerSize = LayerS;
         studyRate = studyR;
 
-        layers = std::vector<std::vector<double> >(size);
+        layers = vector<vector<double> >(size);
         for (int i = 0; i < size; ++i) {
             layers[i].resize(layerSize[i]);
         }
 
-        layersZ = std::vector<std::vector<double> >(size);
-        b = std::vector<std::vector<double> >(size);
+        layersZ = vector<vector<double> >(size);
+        b = vector<vector<double> >(size);
+
         for (int i = 1; i < size; ++i) {
-            layersZ[i] = std::vector<double>(layerSize[i]);
-            b[i] = std::vector<double>(layerSize[i]);
+            layersZ[i] = vector<double>(layerSize[i]);
+            b[i] = vector<double>(layerSize[i]);
         }
 
-        w = std::vector<std::vector<std::vector<double> > >(size - 1);
+        w = vector<vector<vector<double> > >(size - 1);
         for (int i = 0; i < size - 1; ++i) {
-            w[i] = std::vector<std::vector<double> >(
+            w[i] = vector(
                 layerSize[i],
-                std::vector<double>(layerSize[i + 1])
+                vector<double>(layerSize[i + 1])
             );
         }
 
@@ -270,5 +307,86 @@ namespace NN {
 
     void NNcore::changeStudyRate(const double rate) {
         studyRate = rate;
+    }
+
+    void NNcore::save(const NNcore &nn, string path) {
+        ofstream outFile(path);
+        if (!outFile.is_open()) {
+            cout << "error" << endl;
+            return;
+        }
+        outFile << nn.size << endl;
+
+        for (int i = 0; i < nn.size; i++) {
+            outFile << nn.layerSize[i] << " ";
+        }
+        outFile << endl;
+
+        for (const auto &layer: nn.b) {
+            for (const auto &bias: layer) {
+                outFile << bias << " ";
+            }
+            outFile << "\n";
+        }
+
+        for (const auto &layer: nn.w) {
+            for (const auto &neuron: layer) {
+                for (const auto &weight: neuron) {
+                    outFile << weight << " ";
+                }
+                outFile << "\n";
+            }
+            outFile << "\n";
+        }
+    }
+
+    void NNcore::init(const string &path, double studyR) {
+        ifstream inFile(path);
+
+        if (!inFile.is_open()) {
+            cout << "error" << endl;
+            return;
+        }
+        studyRate = studyR;
+
+        inFile >> size;
+        layerSize = vector<int>(size);
+        for (int i = 0; i < size; i++) {
+            inFile >> layerSize[i];
+        }
+
+        layers = vector<vector<double> >(size);
+        for (int i = 0; i < size; ++i) {
+            layers[i].resize(layerSize[i]);
+        }
+
+        layersZ = vector<vector<double> >(size);
+        b = vector<vector<double> >(size);
+        for (int i = 1; i < size; ++i) {
+            layersZ[i] = vector<double>(layerSize[i]);
+            b[i] = vector<double>(layerSize[i]);
+        }
+
+        w = vector<vector<vector<double> > >(size - 1);
+        for (int i = 0; i < size - 1; ++i) {
+            w[i] = vector<vector<double> >(
+                layerSize[i],
+                vector<double>(layerSize[i + 1])
+            );
+        }
+
+        for (int i = 1; i < size; i++) {
+            for (int j = 0; j < layerSize[i]; j++) {
+                inFile >> b[i][j];
+            }
+        }
+
+        for (int i = 0; i < size - 1; i++) {
+            for (int j = 0; j < layerSize[i]; j++) {
+                for (int k = 0; k < layerSize[i + 1]; k++) {
+                    inFile >> w[i][j][k];
+                }
+            }
+        }
     }
 } // NN
