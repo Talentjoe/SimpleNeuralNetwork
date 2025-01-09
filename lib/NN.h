@@ -49,7 +49,7 @@ namespace NN {
 
         static void save(const NNcore &nn, std::string path);
 
-        void init(const std::string &path, double studyRate, double dropRate);
+        void init(const std::string &path, double studyRate);
     };
 }
 
