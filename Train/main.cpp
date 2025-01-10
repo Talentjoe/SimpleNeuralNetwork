@@ -8,22 +8,22 @@ using namespace std;
 
 
 int main() {
-    const int termsOfTrain = 5;
-    double Srate = 0.1;
+    const int termsOfTrain = 1;
+    double Srate = 1;
 
     srand(time(nullptr) * 3049);
 
     auto *nn = new NN::NNcore();
-    nn->init(vector{28 * 28, 128, 64, 10}, Srate);
+    nn->init(vector{28 * 28,300, 10}, Srate);
 
     vector<vector<double> > inData;
     vector<int> outData;
-    inData = readData::readData::readImageData("../Data/train-images.idx3-ubyte");
-    outData = readData::readData::readTagData("../Data/train-labels.idx1-ubyte");
+    inData = readData::readData::readImageData("../Data/train-images.idx3-ubyte",10000);
+    outData = readData::readData::readTagData("../Data/train-labels.idx1-ubyte", 10000);
 
     for (int j = 0; j < termsOfTrain; j++) {
         nn->train(inData, outData, true);
-        Srate *= 0.05;
+        //Srate *= 0.05;
         nn->changeStudyRate(Srate);
     }
 
@@ -36,10 +36,7 @@ int main() {
 
     NN::NNcore::save(*nn, "test.mod");
 
-    auto *nn2 = new NN::NNcore();
-    nn2->init("test.mod", 0);
-
-    nn2->test(testInData, testOutData);
+    delete nn;
 
     return 0;
 }

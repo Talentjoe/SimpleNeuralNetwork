@@ -32,7 +32,7 @@ namespace NN {
 
         int corrctCnt = 0;
         int wrongCnt = 0;
-        vector<double> answer(10, 0.0);
+        vector answer(10, 0.0);
 
         for (int i = 0; i < inNums.size(); i++) {
             if (inNums[i].size() != layerSize[0] || correctOut[i] > layerSize[size - 1]) {
@@ -42,6 +42,8 @@ namespace NN {
 
             forward(inNums[i]);
             answer[correctOut[i]] = 1;
+            if (addDropout)
+                dropSome();
             backpropagation(answer);
             answer[correctOut[i]] = 0;
 
@@ -258,10 +260,89 @@ namespace NN {
         return res;
     }
 
-    void NNcore::init(const vector<int>& LayerS, const double studyR) {
+
+
+    void NNcore::changeStudyRate(const double rate) {
+        studyRate = rate;
+    }
+
+    void NNcore::changeDropOutRate(const double rate) {
+        if (dropOutRate < 0) {
+            addDropout = false;
+        } else {
+            addDropout = true;
+            dropOutRate = rate;
+        }
+    }
+
+    void NNcore::dropSome() {
+        if (!addDropout)
+            return;
+
+
+        for (int i = 1; i < size; i++) {
+            for (int j = 0; j < layerSize[i]; j++) {
+                if (getRandomDoubleNumber(1,0)< dropOutRate) //So Slow Here Improve Later
+                    b[i][j] = 0;
+            }
+        }
+
+        for (int i = 0; i < size - 1; i++) {
+            for (int j = 0; j < layerSize[i]; j++) {
+                for (int k = 0; k < layerSize[i + 1]; k++) {
+                    if (getRandomDoubleNumber(1,0)< dropOutRate) //So Slow Here Improve Later
+                        w[i][j][k] = 0;
+                }
+            }
+        }
+
+
+
+
+    }
+
+    void NNcore::save(const NNcore &nn, string path) {
+        ofstream outFile(path);
+        if (!outFile.is_open()) {
+            cout << "error" << endl;
+            return;
+        }
+        outFile << nn.size << endl;
+
+        for (int i = 0; i < nn.size; i++) {
+            outFile << nn.layerSize[i] << " ";
+        }
+        outFile << endl;
+
+        for (const auto &layer: nn.b) {
+            for (const auto &bias: layer) {
+                outFile << bias << " ";
+            }
+            outFile << "\n";
+        }
+
+        for (const auto &layer: nn.w) {
+            for (const auto &neuron: layer) {
+                for (const auto &weight: neuron) {
+                    outFile << weight << " ";
+                }
+                outFile << "\n";
+            }
+            outFile << "\n";
+        }
+    }
+
+    void NNcore::init(const vector<int>& LayerS, const double studyR, const double drRate) {
         size = LayerS.size();
         layerSize = LayerS;
         studyRate = studyR;
+
+        if (dropOutRate < 0) {
+            addDropout = false;
+        } else {
+            addDropout = true;
+            dropOutRate = drRate;
+        }
 
         layers = vector<vector<double> >(size);
         for (int i = 0; i < size; ++i) {
@@ -305,42 +386,7 @@ namespace NN {
         }
     }
 
-    void NNcore::changeStudyRate(const double rate) {
-        studyRate = rate;
-    }
-
-    void NNcore::save(const NNcore &nn, string path) {
-        ofstream outFile(path);
-        if (!outFile.is_open()) {
-            cout << "error" << endl;
-            return;
-        }
-        outFile << nn.size << endl;
-
-        for (int i = 0; i < nn.size; i++) {
-            outFile << nn.layerSize[i] << " ";
-        }
-        outFile << endl;
-
-        for (const auto &layer: nn.b) {
-            for (const auto &bias: layer) {
-                outFile << bias << " ";
-            }
-            outFile << "\n";
-        }
-
-        for (const auto &layer: nn.w) {
-            for (const auto &neuron: layer) {
-                for (const auto &weight: neuron) {
-                    outFile << weight << " ";
-                }
-                outFile << "\n";
-            }
-            outFile << "\n";
-        }
-    }
-
-    void NNcore::init(const string &path, double studyR) {
+    void NNcore::init(const string &path, double studyR, double drRate ) {
         ifstream inFile(path);
 
         if (!inFile.is_open()) {
@@ -348,6 +394,13 @@ namespace NN {
             return;
         }
         studyRate = studyR;
+
+        if (dropOutRate < 0) {
+            addDropout = false;
+        } else {
+            addDropout = true;
+            dropOutRate = drRate;
+        }
 
         inFile >> size;
         layerSize = vector<int>(size);
