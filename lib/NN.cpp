@@ -8,6 +8,7 @@
 #include <cmath>
 #include <fstream>
 #include <iomanip>
+#include <ppl.h>
 
 namespace NN {
     using namespace std;
@@ -159,22 +160,21 @@ namespace NN {
             delta[size - 1][i] = (layers[size - 1][i] - correctOut[i]) * sigmoidP(layersZ[size - 1][i]); //BP1
         }
         for (int i = size - 2; i > 0; i--) {
-            for (int j = 0; j < layerSize[i]; j++) {
+            concurrency::parallel_for(int(0),layerSize[i], [&](int j) {
                 double value = 0;
                 for (int k = 0; k < layerSize[i + 1]; k++) {
                     value += w[i][j][k] * delta[i + 1][k];
                 }
                 delta[i][j] = sigmoidP(layersZ[i][j]) * value; // BP2
-            }
+            });
         }
         for (int i = 1; i < size; i++) {
-            for (int j = 0; j < layerSize[i]; j++) {
+            concurrency::parallel_for(int(0),layerSize[i], [&](int j) {
                 b[i][j] -= delta[i][j] * studyRate;
-
                 for (int k = 0; k < layerSize[i - 1]; k++) {
                     w[i - 1][k][j] -= layers[i - 1][k] * delta[i][j] * studyRate;
                 }
-            }
+            });
         }
 
         double pre = CalCost(correctOut);
@@ -261,7 +261,6 @@ namespace NN {
     }
 
 
-
     void NNcore::changeStudyRate(const double rate) {
         studyRate = rate;
     }
@@ -282,7 +281,7 @@ namespace NN {
 
         for (int i = 1; i < size; i++) {
             for (int j = 0; j < layerSize[i]; j++) {
-                if (getRandomDoubleNumber(1,0)< dropOutRate) //So Slow Here Improve Later
+                if (getRandomDoubleNumber(1, 0) < dropOutRate) //So Slow Here Improve Later
                     b[i][j] = 0;
             }
         }
@@ -290,15 +289,11 @@ namespace NN {
         for (int i = 0; i < size - 1; i++) {
             for (int j = 0; j < layerSize[i]; j++) {
                 for (int k = 0; k < layerSize[i + 1]; k++) {
-                    if (getRandomDoubleNumber(1,0)< dropOutRate) //So Slow Here Improve Later
+                    if (getRandomDoubleNumber(1, 0) < dropOutRate) //So Slow Here Improve Later
                         w[i][j][k] = 0;
                 }
             }
         }
-
-
-
-
     }
 
     void NNcore::save(const NNcore &nn, string path) {
@@ -332,7 +327,7 @@ namespace NN {
         }
     }
 
-    void NNcore::init(const vector<int>& LayerS, const double studyR, const double drRate) {
+    void NNcore::init(const vector<int> &LayerS, const double studyR, const double drRate) {
         size = LayerS.size();
         layerSize = LayerS;
         studyRate = studyR;
@@ -386,7 +381,7 @@ namespace NN {
         }
     }
 
-    void NNcore::init(const string &path, double studyR, double drRate ) {
+    void NNcore::init(const string &path, double studyR, double drRate) {
         ifstream inFile(path);
 
         if (!inFile.is_open()) {

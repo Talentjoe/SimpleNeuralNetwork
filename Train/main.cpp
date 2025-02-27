@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <ctime>
+#include <iostream>
 
 #include "../lib/NN.h"
 #include "../lib/readData.h"
@@ -9,23 +10,29 @@ using namespace std;
 
 int main() {
     const int termsOfTrain = 1;
-    double Srate = 1;
+    double Srate = 0.5;
 
+    time_t start_time;
+    start_time = time(nullptr);
     srand(time(nullptr) * 3049);
 
     auto *nn = new NN::NNcore();
-    nn->init(vector{28 * 28,300, 10}, Srate);
+    nn->init(vector{28 * 28, 200, 10}, Srate);
 
     vector<vector<double> > inData;
     vector<int> outData;
-    inData = readData::readData::readImageData("../Data/train-images.idx3-ubyte",10000);
+    inData = readData::readData::readImageData("../Data/train-images.idx3-ubyte", 10000);
     outData = readData::readData::readTagData("../Data/train-labels.idx1-ubyte", 10000);
+
+    std::cout << "Start Training" << std::endl;
 
     for (int j = 0; j < termsOfTrain; j++) {
         nn->train(inData, outData, true);
         //Srate *= 0.05;
         nn->changeStudyRate(Srate);
     }
+
+    std::cout << "Total train time: " << time(nullptr) - start_time << " second" << std::endl;
 
     vector<vector<double> > testInData;
     vector<int> testOutData;

@@ -7,6 +7,9 @@
 
 #include <vector>
 #include <string>
+#include <algorithm>
+#include <thread>
+#include <functional>
 
 namespace NN {
     class NNcore {
@@ -141,6 +144,7 @@ namespace NN {
          */
         void init(const std::vector<int> &LayerS, double studyR, double drRate = -1);
     };
+
 }
 
 #endif //NN_H
