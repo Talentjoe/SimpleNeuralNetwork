@@ -10,14 +10,15 @@ using namespace std;
 
 int main() {
     const int termsOfTrain = 1;
-    double Srate = 0.5;
+    double Srate = 1;
 
     time_t start_time;
     start_time = time(nullptr);
     srand(time(nullptr) * 3049);
 
     auto *nn = new NN::NNcore();
-    nn->init(vector{28 * 28, 200, 10}, Srate);
+
+    nn->init(vector{28 * 28,128, 10}, Srate);
 
     vector<vector<double> > inData;
     vector<int> outData;
@@ -26,10 +27,12 @@ int main() {
 
     std::cout << "Start Training" << std::endl;
 
+    for (int i = 0; i < 5; i++) {
     for (int j = 0; j < termsOfTrain; j++) {
         nn->train(inData, outData, true);
         //Srate *= 0.05;
         nn->changeStudyRate(Srate);
+    }
     }
 
     std::cout << "Total train time: " << time(nullptr) - start_time << " second" << std::endl;

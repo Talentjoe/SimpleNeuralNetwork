@@ -172,7 +172,8 @@ namespace NN {
             concurrency::parallel_for(int(0),layerSize[i], [&](int j) {
                 b[i][j] -= delta[i][j] * studyRate;
                 for (int k = 0; k < layerSize[i - 1]; k++) {
-                    w[i - 1][k][j] -= layers[i - 1][k] * delta[i][j] * studyRate;
+                    w[i - 1][k][j] -= layers[i - 1][k] * delta[i][j] * studyRate +
+                            ( 0.00001*w[i - 1][k][j] );
                 }
             });
         }
