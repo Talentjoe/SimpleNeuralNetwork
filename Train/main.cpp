@@ -23,7 +23,7 @@ int main() {
 
     for (int j = 0; j < termsOfTrain; j++) {
         nn->train(inData, outData, true);
-        Srate *= 0.5;
+        //Srate *= 0.05;
         nn->changeStudyRate(Srate);
     }
 
