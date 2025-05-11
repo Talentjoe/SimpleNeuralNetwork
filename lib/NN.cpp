@@ -31,7 +31,11 @@ namespace NN {
     }
 
     double ReLUP(double x) {
-        return x > 0 ? 1 : 0;
+        return x > 0 ? 1 : 0.01;
+    }
+
+    double heLimit(int fan_in) {
+        return sqrt(6.0 / fan_in);
     }
 
     double NNcore::train(vector<vector<double> > inNums, vector<int> correctOut, bool getAcc) {
@@ -65,7 +69,7 @@ namespace NN {
                 }
             }
 
-            if (i % 1000 == 1000-1) {
+            if (i % 1000 == 0 && i != 0) {
                 cout << "\rProgress: " << i / (double) inNums.size() * 100 << "%";
                 if (getAcc) {
                     cout << " Correct Percentage: " << corrctCnt / (double) (corrctCnt + wrongCnt) * 100 << "%";
@@ -386,6 +390,7 @@ namespace NN {
             bool lastLayer = i == size - 1;
 
             for (int j = 0; j < layerSize[i]; j++) {
+                double lim = heLimit(layerSize[i-1]);
                 layers[i][j] = getRandomDoubleNumber();
                 if (!firstLayer) {
                     layersZ[i][j] = getRandomDoubleNumber();
@@ -393,7 +398,7 @@ namespace NN {
                 }
                 if (!lastLayer) {
                     for (int k = 0; k < layerSize[i + 1]; k++) {
-                        w[i][j][k] = getRandomDoubleNumber();
+                        w[i][j][k] = getRandomDoubleNumber( -lim, lim);
                     }
                 }
             }
