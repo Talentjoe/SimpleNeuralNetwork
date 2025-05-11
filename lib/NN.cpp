@@ -8,6 +8,7 @@
 #include <cmath>
 #include <fstream>
 #include <iomanip>
+#include <functional>
 
 namespace NN {
     using namespace std;
@@ -21,7 +22,16 @@ namespace NN {
     }
 
     double sigmoidP(double x) {
-        return sigmoid(x) * (1 - sigmoid(x));
+        double t =sigmoid(x);
+        return t * (1 - t);
+    }
+
+    double ReLU(double x) {
+        return max(x, 0.0);
+    }
+
+    double ReLUP(double x) {
+        return x > 0 ? 1 : 0;
     }
 
     double NNcore::train(vector<vector<double> > inNums, vector<int> correctOut, bool getAcc) {
@@ -55,7 +65,7 @@ namespace NN {
                 }
             }
 
-            if (i % 1000 == 0) {
+            if (i % 1000 == 1000-1) {
                 cout << "\rProgress: " << i / (double) inNums.size() * 100 << "%";
                 if (getAcc) {
                     cout << " Correct Percentage: " << corrctCnt / (double) (corrctCnt + wrongCnt) * 100 << "%";
@@ -125,7 +135,10 @@ namespace NN {
                 for (int j = 0; j < layerSize[i - 1]; j++)
                     layersZ[i][k] += layers[i - 1][j] * w[i - 1][j][k];
                 layersZ[i][k] += b[i][k];
-                layers[i][k] = sigmoid(layersZ[i][k]);
+                if (i == size-1)
+                    layers[i][k] = sigmoid(layersZ[i][k]);
+                else
+                    layers[i][k] = ReLU(layersZ[i][k]);
             }
         }
         if (printRes) {
@@ -164,7 +177,7 @@ namespace NN {
                 for (int k = 0; k < layerSize[i + 1]; k++) {
                     value += w[i][j][k] * delta[i + 1][k];
                 }
-                delta[i][j] = sigmoidP(layersZ[i][j]) * value; // BP2
+                delta[i][j] = ReLUP(layersZ[i][j]) * value; // BP2
             }
         }
         for (int i = 1; i < size; i++) {
@@ -173,7 +186,7 @@ namespace NN {
 
                 for (int k = 0; k < layerSize[i - 1]; k++) {
                     w[i - 1][k][j] -= layers[i - 1][k] * delta[i][j] * studyRate +
-                            ( 0.00001*w[i - 1][k][j] );
+                            ( 0.0000*w[i - 1][k][j] );
                 }
             }
         }
@@ -212,7 +225,7 @@ namespace NN {
         }
 
         cout << "W from layer " << layerNumberToPrint << " to " << layerNumberToPrint + 1 << ": " << endl;
-        cout << "From↓   To-> ";
+        cout << "From   To-> ";
         for (int i = 0; i < layerSize[layerNumberToPrint + 1]; i++) {
             cout << setw(10) << i << " ";
         }

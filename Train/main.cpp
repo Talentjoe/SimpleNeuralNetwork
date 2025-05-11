@@ -8,8 +8,8 @@ using namespace std;
 
 
 int main() {
-    const int termsOfTrain = 1;
-    double Srate = 1;
+    const int termsOfTrain = 5;
+    double Srate = 0.01;
 
     srand(time(nullptr) * 3049);
 
@@ -24,7 +24,7 @@ int main() {
     for (int i = 0; i < 5; i++) {
     for (int j = 0; j < termsOfTrain; j++) {
         nn->train(inData, outData, true);
-        //Srate *= 0.05;
+        Srate *= 0.5;
         nn->changeStudyRate(Srate);
     }
     }
